@@ -23,9 +23,6 @@ jobs:
       with:
         release: '13.2.Rel1'
 
-    - name: install sdl
-      run: sudo apt-get update && sudo apt-get install -y eatmydata && sudo eatmydata apt-get install -y libsdl2-dev
-
     - name: get submodules
       run: git submodule update --init --recursive
 
