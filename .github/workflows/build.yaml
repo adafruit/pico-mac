@@ -37,6 +37,8 @@ jobs:
           ./fetch-rom-dsk.sh
           ./fruitjam-build.sh -m 4096
           ./fruitjam-build.sh -m 4096 -v
+          ./fruitjam-build.sh -m 4096 -o
+          ./fruitjam-build.sh -m 4096 -v -o
           ./fruitjam-build.sh -m 400
           ./fruitjam-build.sh -m 400 -v
           ./fruitjam-build.sh -m 400 -o
