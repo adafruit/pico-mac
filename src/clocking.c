@@ -31,7 +31,7 @@ static void __no_inline_not_in_flash_func(set_qmi_timing)() {
 #endif
 
 #ifndef RP2350_PSRAM_MAX_SCK_HZ
-#define RP2350_PSRAM_MAX_SCK_HZ (109000000)
+#define RP2350_PSRAM_MAX_SCK_HZ (66777777)
 #endif
 
 #define SEC_TO_FS 1000000000000000ll
@@ -62,6 +62,7 @@ static void __no_inline_not_in_flash_func(set_psram_timing)(void) {
 
     printf("syshz=%u\n", sysHz);
     printf("Max Select: %d, Min Deselect: %d, clock divider: %d\n", maxSelect, minDeselect, clockDivider);
+    printf("PSRAM clock rate %.1fMHz\n", (float)sysHz / clockDivider / 1e6);
 
     qmi_hw->m[1].timing = QMI_M1_TIMING_PAGEBREAK_VALUE_1024 << QMI_M1_TIMING_PAGEBREAK_LSB | // Break between pages.
                           3 << QMI_M1_TIMING_SELECT_HOLD_LSB | // Delay releasing CS for 3 extra system cycles.
@@ -142,10 +143,6 @@ void overclock(enum clk_sys_speed clk_sys_div, uint32_t bit_clk_khz) {
 	stdio_init_all();
     set_psram_timing();
 #define SHOW_CLK(i) printf("clk_get_hz(%s) -> %u\n", #i, clock_get_hz(i));
-        SHOW_CLK(clk_gpout0);
-        SHOW_CLK(clk_gpout1);
-        SHOW_CLK(clk_gpout2);
-        SHOW_CLK(clk_gpout3);
         SHOW_CLK(clk_ref);
         SHOW_CLK(clk_sys);
         SHOW_CLK(clk_peri);

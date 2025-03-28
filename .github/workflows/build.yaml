@@ -23,9 +23,6 @@ jobs:
       with:
         release: '13.2.Rel1'
 
-    - name: install sdl
-      run: sudo apt-get update && sudo apt-get install -y eatmydata && sudo eatmydata apt-get install -y libsdl2-dev
-
     - name: get submodules
       run: git submodule update --init --recursive
 
@@ -37,6 +34,8 @@ jobs:
           ./fetch-rom-dsk.sh
           ./fruitjam-build.sh -m 4096
           ./fruitjam-build.sh -m 4096 -v
+          ./fruitjam-build.sh -m 4096 -o
+          ./fruitjam-build.sh -m 4096 -v -o
           ./fruitjam-build.sh -m 400
           ./fruitjam-build.sh -m 400 -v
           ./fruitjam-build.sh -m 400 -o
