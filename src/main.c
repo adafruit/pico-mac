@@ -403,14 +403,25 @@ static void __no_inline_not_in_flash_func(setup_psram)(void) {
     }
 
     // RESETEN, RESET and quad enable
-    for (uint8_t i = 0; i < 3; i++) {
+    for (uint8_t i = 0; i < 4; i++) {
         qmi_hw->direct_csr |= QMI_DIRECT_CSR_ASSERT_CS1N_BITS;
-        if (i == 0) {
-            qmi_hw->direct_tx = 0x66;
-        } else if (i == 1) {
-            qmi_hw->direct_tx = 0x99;
-        } else {
-            qmi_hw->direct_tx = 0x35;
+        switch (i) {
+            case 0:
+                // RESETEN
+                qmi_hw->direct_tx = 0x66;
+                break;
+            case 1:
+                // RESET
+                qmi_hw->direct_tx = 0x99;
+                break;
+            case 2:
+                // Quad enable
+                qmi_hw->direct_tx = 0x35;
+                break;
+            case 3:
+                // Toggle wrap boundary mode
+                qmi_hw->direct_tx = 0xc0;
+                break;
         }
         while ((qmi_hw->direct_csr & QMI_DIRECT_CSR_BUSY_BITS) != 0) {
         }
