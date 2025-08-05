@@ -403,14 +403,25 @@ static void __no_inline_not_in_flash_func(setup_psram)(void) {
     }
 
     // RESETEN, RESET and quad enable
-    for (uint8_t i = 0; i < 3; i++) {
+    for (uint8_t i = 0; i < 4; i++) {
         qmi_hw->direct_csr |= QMI_DIRECT_CSR_ASSERT_CS1N_BITS;
-        if (i == 0) {
-            qmi_hw->direct_tx = 0x66;
-        } else if (i == 1) {
-            qmi_hw->direct_tx = 0x99;
-        } else {
-            qmi_hw->direct_tx = 0x35;
+        switch (i) {
+            case 0:
+                // RESETEN
+                qmi_hw->direct_tx = 0x66;
+                break;
+            case 1:
+                // RESET
+                qmi_hw->direct_tx = 0x99;
+                break;
+            case 2:
+                // Quad enable
+                qmi_hw->direct_tx = 0x35;
+                break;
+            case 3:
+                // Toggle wrap boundary mode
+                qmi_hw->direct_tx = 0xc0;
+                break;
         }
         while ((qmi_hw->direct_csr & QMI_DIRECT_CSR_BUSY_BITS) != 0) {
         }
@@ -480,27 +491,40 @@ static void __no_inline_not_in_flash_func(setup_psram)(void) {
 
 int     main()
 {
-#if defined(OVERCLOCK) && OVERCLOCK+0
+        setup_psram();
+#if OVERCLOCK
         overclock(CLK_SYS_264MHZ, 252000);
 #endif
-        // set_sys_clock_khz(250*1000, true);
-
-        setup_psram();
-
 	stdio_init_all();
-        io_init();
 
-#define SHOW_CLK(i) printf("clk_get_hz(%s) -> %u\n", #i, clock_get_hz(i));
-        SHOW_CLK(clk_gpout0);
-        SHOW_CLK(clk_gpout1);
-        SHOW_CLK(clk_gpout2);
-        SHOW_CLK(clk_gpout3);
-        SHOW_CLK(clk_ref);
-        SHOW_CLK(clk_sys);
-        SHOW_CLK(clk_peri);
-        SHOW_CLK(clk_hstx);
-        SHOW_CLK(clk_usb);
-        SHOW_CLK(clk_adc);
+printf("psram size %u\n", _psram_size);
+
+#ifndef RAM_TEST
+#define RAM_TEST (0)
+#endif
+
+#if RAM_TEST
+for(int pass=0; pass<10; pass++) {
+    uint8_t acc = 1;
+    for(int i=0; i < _psram_size; i++) {
+        umac_ram[i] = acc;
+        acc = acc * 13 + 21;
+    }
+
+    acc = 1;
+    for(int i=0; i < _psram_size; i++) {
+        uint8_t ri = umac_ram[i];
+        if(ri != acc) {
+            panic("[%08x] Stored %02x read %02x", i, acc, ri);
+        }
+        acc = acc * 13 + 21;
+    }
+
+    printf("ram test pass %d OK\n", pass);
+}
+#endif
+
+        io_init();
 
 #if ENABLE_AUDIO
         audio_setup();

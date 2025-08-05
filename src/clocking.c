@@ -30,8 +30,12 @@ static void __no_inline_not_in_flash_func(set_qmi_timing)() {
 #define RP2350_PSRAM_MIN_DESELECT_FS (50000000)
 #endif
 
+#ifndef RP2350_PSRAM_RX_DELAY_FS
+#define RP2350_PSRAM_RX_DELAY_FS (3333333)
+#endif
+
 #ifndef RP2350_PSRAM_MAX_SCK_HZ
-#define RP2350_PSRAM_MAX_SCK_HZ (109000000)
+#define RP2350_PSRAM_MAX_SCK_HZ (133000000)
 #endif
 
 #define SEC_TO_FS 1000000000000000ll
@@ -49,6 +53,7 @@ static void __no_inline_not_in_flash_func(set_psram_timing)(void) {
     // Get the clock femto seconds per cycle.
 
     uint32_t fsPerCycle = SEC_TO_FS / sysHz;
+    uint32_t fsPerHalfCycle = fsPerCycle / 2;
 
     // the maxSelect value is defined in units of 64 clock cycles
     // So maxFS / (64 * fsPerCycle) = maxSelect = RP2350_PSRAM_MAX_SELECT_FS64/fsPerCycle
@@ -60,11 +65,18 @@ static void __no_inline_not_in_flash_func(set_psram_timing)(void) {
 
     volatile uint8_t minDeselect = (RP2350_PSRAM_MIN_DESELECT_FS + fsPerCycle - 1) / fsPerCycle;
 
+    // RX delay (RP2350 datasheet 12.14.3.1) delay between between rising edge of SCK and
+    // the start of RX sampling. Expressed in 0.5 system clock cycles. Smallest value
+    // >= 3.3ns.
+    volatile uint8_t rxDelay = (RP2350_PSRAM_RX_DELAY_FS + fsPerHalfCycle - 1) / fsPerHalfCycle;
+
     printf("syshz=%u\n", sysHz);
-    printf("Max Select: %d, Min Deselect: %d, clock divider: %d\n", maxSelect, minDeselect, clockDivider);
+    printf("Max Select: %d, Min Deselect: %d, RX delay: %d, clock divider: %d\n", maxSelect, minDeselect, rxDelay, clockDivider);
+    printf("PSRAM clock rate %.1fMHz\n", (float)sysHz / clockDivider / 1e6);
 
     qmi_hw->m[1].timing = QMI_M1_TIMING_PAGEBREAK_VALUE_1024 << QMI_M1_TIMING_PAGEBREAK_LSB | // Break between pages.
                           3 << QMI_M1_TIMING_SELECT_HOLD_LSB | // Delay releasing CS for 3 extra system cycles.
+                          rxDelay << QMI_M1_TIMING_RXDELAY_LSB | // Delay between SCK and RX sampling
                           1 << QMI_M1_TIMING_COOLDOWN_LSB | 1 << QMI_M1_TIMING_RXDELAY_LSB |
                           maxSelect << QMI_M1_TIMING_MAX_SELECT_LSB | minDeselect << QMI_M1_TIMING_MIN_DESELECT_LSB |
                           clockDivider << QMI_M1_TIMING_CLKDIV_LSB;
@@ -142,10 +154,6 @@ void overclock(enum clk_sys_speed clk_sys_div, uint32_t bit_clk_khz) {
 	stdio_init_all();
     set_psram_timing();
 #define SHOW_CLK(i) printf("clk_get_hz(%s) -> %u\n", #i, clock_get_hz(i));
-        SHOW_CLK(clk_gpout0);
-        SHOW_CLK(clk_gpout1);
-        SHOW_CLK(clk_gpout2);
-        SHOW_CLK(clk_gpout3);
         SHOW_CLK(clk_ref);
         SHOW_CLK(clk_sys);
         SHOW_CLK(clk_peri);
