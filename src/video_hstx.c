@@ -35,10 +35,10 @@
 // ----------------------------------------------------------------------------
 // DVI constants
 
-#define TMDS_CTRL_00 0x2abu
+#define TMDS_CTRL_00 0x354u
 #define TMDS_CTRL_01 0x0abu
 #define TMDS_CTRL_10 0x154u
-#define TMDS_CTRL_11 0x354u
+#define TMDS_CTRL_11 0x2abu
 
 #define SYNC_V0_H0 (TMDS_CTRL_00 | (TMDS_CTRL_00 << 10) | (TMDS_CTRL_00 << 20))
 #define SYNC_V0_H1 (TMDS_CTRL_01 | (TMDS_CTRL_00 << 10) | (TMDS_CTRL_00 << 20))
@@ -268,8 +268,8 @@ void    video_init(uint32_t *framebuffer) {
             (lane * 10    ) << HSTX_CTRL_BIT0_SEL_P_LSB |
             (lane * 10 + 1) << HSTX_CTRL_BIT0_SEL_N_LSB;
         // The two halves of each pair get identical data, but one pin is inverted.
-        hstx_ctrl_hw->bit[(bit    ) - HSTX_FIRST_PIN] = lane_data_sel_bits;
-        hstx_ctrl_hw->bit[(bit ^ 1) - HSTX_FIRST_PIN] = lane_data_sel_bits | HSTX_CTRL_BIT0_INV_BITS;
+    hstx_ctrl_hw->bit[(bit    ) - HSTX_FIRST_PIN] = lane_data_sel_bits | HSTX_CTRL_BIT0_INV_BITS;
+    hstx_ctrl_hw->bit[(bit ^ 1) - HSTX_FIRST_PIN] = lane_data_sel_bits;
     }
 
     for (int i = 12; i <= 19; ++i) {
