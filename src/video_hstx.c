@@ -261,16 +261,31 @@ void    video_init(uint32_t *framebuffer) {
 
     const int pinout[] = { HSTX_D0P, HSTX_D1P, HSTX_D2P };
 
-    for(uint lane = 0; lane < 3; lane++ ) {
-        int bit = pinout[lane];
+	#if defined(DISP_WIDTH) && DISP_WIDTH == 640 && !defined(USE_PSRAM)
+		// 640x480 without PSRAM - no mirroring, need inversion
+		#define NEED_HSTX_INVERSION 1
+	#else
+		// All other cases use mirroring which already inverts
+		#define NEED_HSTX_INVERSION 0
+	#endif
 
-        uint32_t lane_data_sel_bits =
-            (lane * 10    ) << HSTX_CTRL_BIT0_SEL_P_LSB |
-            (lane * 10 + 1) << HSTX_CTRL_BIT0_SEL_N_LSB;
-        // The two halves of each pair get identical data, but one pin is inverted.
-    hstx_ctrl_hw->bit[(bit    ) - HSTX_FIRST_PIN] = lane_data_sel_bits | HSTX_CTRL_BIT0_INV_BITS;
-    hstx_ctrl_hw->bit[(bit ^ 1) - HSTX_FIRST_PIN] = lane_data_sel_bits;
-    }
+	for(uint lane = 0; lane < 3; lane++ ) {
+		int bit = pinout[lane];
+
+		uint32_t lane_data_sel_bits =
+			(lane * 10    ) << HSTX_CTRL_BIT0_SEL_P_LSB |
+			(lane * 10 + 1) << HSTX_CTRL_BIT0_SEL_N_LSB;
+		
+	#if NEED_HSTX_INVERSION
+		// Invert the data when not using framebuffer mirroring
+		hstx_ctrl_hw->bit[(bit    ) - HSTX_FIRST_PIN] = lane_data_sel_bits | HSTX_CTRL_BIT0_INV_BITS;
+		hstx_ctrl_hw->bit[(bit ^ 1) - HSTX_FIRST_PIN] = lane_data_sel_bits;
+	#else
+		// Normal polarity when framebuffer mirroring handles inversion
+		hstx_ctrl_hw->bit[(bit    ) - HSTX_FIRST_PIN] = lane_data_sel_bits;
+		hstx_ctrl_hw->bit[(bit ^ 1) - HSTX_FIRST_PIN] = lane_data_sel_bits | HSTX_CTRL_BIT0_INV_BITS;
+	#endif
+	}
 
     for (int i = 12; i <= 19; ++i) {
         gpio_set_function(i, 0); // HSTX
