@@ -35,9 +35,9 @@
 // ----------------------------------------------------------------------------
 // DVI constants
 
-#define TMDS_CTRL_00 0x154u
+#define TMDS_CTRL_00 0x354u
 #define TMDS_CTRL_01 0x0abu
-#define TMDS_CTRL_10 0x354u
+#define TMDS_CTRL_10 0x154u
 #define TMDS_CTRL_11 0x2abu
 
 #define SYNC_V0_H0 (TMDS_CTRL_00 | (TMDS_CTRL_00 << 10) | (TMDS_CTRL_00 << 20))

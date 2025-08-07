@@ -125,7 +125,7 @@ static void copy_framebuffer() {
 #if DISP_WIDTH==640 && DISP_HEIGHT==480
     uint32_t *dest = umac_framebuffer_mirror;
     for(int i=0; i<640*480/32; i++) {
-        *dest++ = *src++;
+        *dest++ = *src++ ^ 0xffffffff;
     }
 #elif DISP_WIDTH==512 && DISP_HEIGHT==342
     #define DISP_XOFFSET ((640 - DISP_WIDTH) / 32 / 2)
