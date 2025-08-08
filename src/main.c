@@ -124,20 +124,8 @@ static void copy_framebuffer() {
     uint32_t *src = (uint32_t*)(umac_ram + umac_get_fb_offset());
 #if DISP_WIDTH==640 && DISP_HEIGHT==480
     uint32_t *dest = umac_framebuffer_mirror;
-    memset(umac_framebuffer_mirror, 0xff, sizeof(uint32_t) * 640 * 480 / 32);
-
-    #define MAC_WIDTH 512
-    #define MAC_HEIGHT 342
-    #define DISP_XOFFSET ((640 - MAC_WIDTH) / 32 / 2)
-    #define DISP_YOFFSET ((480 - MAC_HEIGHT) / 2)
-    #define LONGS_PER_INPUT_ROW (MAC_WIDTH / 32)
-    #define LONGS_PER_OUTPUT_ROW (640 / 32)
-    
-    for(int i=0; i<MAC_HEIGHT; i++) {
-        dest = umac_framebuffer_mirror + (DISP_YOFFSET * LONGS_PER_OUTPUT_ROW + DISP_XOFFSET) + LONGS_PER_OUTPUT_ROW * i;
-        for(int j=0; j<LONGS_PER_INPUT_ROW; j++) {
-            *dest++ = *src++ ^ 0xffffffff;  // Include the inversion
-        }
+    for(int i=0; i<640*480/32; i++) {
+        *dest++ = *src++;
     }
 #elif DISP_WIDTH==512 && DISP_HEIGHT==342
     #define DISP_XOFFSET ((640 - DISP_WIDTH) / 32 / 2)
